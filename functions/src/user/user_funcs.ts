@@ -3,6 +3,7 @@ import {onDocumentWritten} from "firebase-functions/v2/firestore";
 import {generateShortID} from "../utils";
 import {firestore, stripe} from "../global/global";
 import {onCall} from "firebase-functions/v2/https";
+import {PaymentStatistics} from "../types/payment_statistics";
 
 export const subscriptionChange = onDocumentWritten(
   "/User/{uid}/payments/{paymentId}", async (event) => {
@@ -56,6 +57,20 @@ export const subscriptionChange = onDocumentWritten(
       .collection("User")
       .doc(event.params.uid)
       .set({subscription: userSubscription}, {merge: true});
+    const pay: PaymentStatistics = {
+      id: data.id,
+      amount: data.amount,
+      amount_received: data.amount_received,
+      created: data.created,
+      currency: data.currency,
+      uid: event.params.uid,
+      receipt_email: data.receipt_email,
+      status: status,
+    };
+    firestore
+      .collection("PaymentStatistics")
+      .doc(event.params.paymentId)
+      .set(pay, {merge: true});
   });
 
 export const createStripeIfNeed = onCall(async (request) => {

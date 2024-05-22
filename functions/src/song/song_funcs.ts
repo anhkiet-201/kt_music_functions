@@ -2,9 +2,13 @@ import {onDocumentWritten} from "firebase-functions/v2/firestore";
 import {
   descrementTagsMetaData,
   incrementTagsMetaData} from "../types/tags_meta_data";
-import {firestore, storage} from "../global/global";
+import {firestore, sendNotifications, storage} from "../global/global";
 import {Song} from "../types/song";
 import {onCall} from "firebase-functions/v2/https";
+import {Artist} from "../types/artist";
+import {Notification} from "../types/notification";
+import {generateShortID} from "../utils";
+import {Follower} from "../types/follower";
 
 export const onSongWrite = onDocumentWritten(
   "Song/{songId}",
@@ -89,3 +93,39 @@ export const onPlaySongWithId = onCall(async (request) => {
   });
   return;
 });
+
+export const sendNotificationsWhenCreateSong = async (song: Song) => {
+  const artist = (
+    await firestore
+      .collection("Artist")
+      .doc(song.artistId)
+      .get()
+  ).data() as unknown as Artist;
+  if (artist == null) return;
+  const notification: Notification = {
+    id: generateShortID(),
+    title: "A new song has been uploaded",
+    content:
+    `The ${artist.name} artist you're interested in just uploaded a new song`,
+    time: Date.now(),
+    image: song.cover,
+    url: "http://datn-578a6.web.app/deeplinks/action?mode=openSong&id=" + song.id,
+    isReaded: false,
+  };
+  // / get follower
+  const followers = (
+    await firestore
+      .collection("Follow")
+      .where(
+        "followId",
+        "==",
+        song.artistId
+      ).get()
+  ).docs;
+  for (const doc of followers) {
+    const data = doc.data() as unknown as Follower;
+    if (data == null) continue;
+    sendNotifications(notification, data.uid);
+  }
+  return;
+};

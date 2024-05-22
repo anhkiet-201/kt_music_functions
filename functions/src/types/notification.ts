@@ -4,5 +4,6 @@ export type Notification = {
     image?: string,
     content: string,
     time: number,
-    url?: string
+    url?: string,
+    isReaded: boolean,
 }

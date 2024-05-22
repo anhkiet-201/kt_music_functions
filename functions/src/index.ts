@@ -15,3 +15,7 @@ export * from "./user/user_funcs";
 export * from "./song/song_funcs";
 export * from "./playlist/playlist_funcs";
 export * from "./follow/follow_funcs";
+export * from "./notifications/notifications_funcs";
+export * from "./sentiment/sentiment_funcs";
+export * from "./sentiment_reactions/sentiment_reactions_funcs";
+export * from "./sentiment_comment/sentiment_comment_funcs";
